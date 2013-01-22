@@ -3,9 +3,6 @@
 #include <netdb.h>
 #include "socket.h"
 
-#include <iostream>
-#include <fstream>
-
 fluent::Socket::Socket(domain_t domain, type_t type, int protocol)
     : fd(-1), connected(false)
 {
@@ -48,7 +45,7 @@ static inline ::std::string itoa(int arg) {
 
 void fluent::Socket::connect(const ::std::string& host, int port)
 {
-    struct sockaddr_in send_addr;
+    //struct sockaddr_in send_addr;
     struct addrinfo * result = nullptr;
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
@@ -83,10 +80,6 @@ void fluent::Socket::send(const char * data, size_t length)
         /* TODO throw exception */
         return;
     }
-    ::std::cout << "length = " << length << "\n";
-    ::std::ofstream copy("copy", ::std::ios::binary);
-    copy.write(data, length);
-    copy.close();
     ssize_t retval = ::send(fd, data, length, 0);
     if( retval < 0 ) {
         throw Exception(errno);

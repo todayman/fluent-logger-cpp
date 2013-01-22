@@ -47,7 +47,6 @@ namespace fluent {
         }
 
     protected:
-        //Packet make_packet(const std::string& label, time_t cur_time, const std::string& data);
         void send(const ::msgpack::sbuffer& sbuf);
         void send_internal(const ::msgpack::sbuffer& sbuf);
         void reconnect();
@@ -96,32 +95,12 @@ namespace fluent {
             add_args(packer, parameters...);
         }
         
- 
-    /* private:
-        template<typename V>
-        bool log(const std::string& label, const std::string& key, const V& value)
-        {
-            return log( label, ::std::time(NULL), key, value);
-        }
-    */
-        
     public:
         template<typename... Params>
         bool log(const std::string& label, Params... parameters)
         {
             return log(label, ::time(NULL), parameters...);
         }
-        
-        /*template<typename... Params>
-        bool log(const std::string& label, time_t timestamp)
-        {
-            msgpack::sbuffer sbuf;
-            msgpack::packer<msgpack::sbuffer> packer(sbuf);
-            packer.pack_array(3);
-            packer.pack(label);
-            packer.pack(timestamp);
-            return sender.emit(sbuf);
-        }*/
         
         template<typename... Params>
         bool log(const std::string& label, time_t timestamp, Params... parameters)

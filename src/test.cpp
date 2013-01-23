@@ -11,7 +11,7 @@ int main(int argc, const char * argv[])
         strm >> port;
     }
 
-    Logger logger("test", "0.0.0.0", port);
-    logger.log("fluent", "key", "value");
+    Logger logger("fluent.test", "0.0.0.0", port);
+    logger.log("", "from", "userA", "to", "userB");
     return 0;
 }

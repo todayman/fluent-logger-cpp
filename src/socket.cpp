@@ -45,7 +45,6 @@ static inline ::std::string itoa(int arg) {
 
 void fluent::Socket::connect(const ::std::string& host, int port)
 {
-    //struct sockaddr_in send_addr;
     struct addrinfo * result = nullptr;
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
@@ -58,10 +57,6 @@ void fluent::Socket::connect(const ::std::string& host, int port)
         return;
     }
     
-    /*send_addr.sin_family = AF_INET;
-    send_addr.sin_addr.s_addr = 0;
-    send_addr.sin_port = htons(port);
-    retval = ::connect(fd, (struct sockaddr*)&send_addr, sizeof(send_addr));*/
     retval = ::connect(fd, result->ai_addr, result->ai_addrlen);
     
     if( result ) {

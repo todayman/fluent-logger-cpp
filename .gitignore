@@ -20,4 +20,7 @@
 Icon
 
 # binaries
-test
+fluent_test
+
+*.pyc
+*.pyo

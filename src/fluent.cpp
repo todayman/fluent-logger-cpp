@@ -66,21 +66,6 @@ fluent::Sender::~Sender()
 #endif
 }
 
-/*fluent::Packet fluent::Sender::make_packet(const std::string& label, time_t cur_time, const std::string& data)
-{
-    std::string msg_tag;
-    if( label.size() != 0 ) {
-        msg_tag = this->tag + '.' + label;
-    }
-    else {
-        msg_tag = this->tag;
-    }
-
-    Packet p = Packet(msg_tag, cur_time, data);
-     The python version prints out the packet here in verbose mode. 
-    return p;
-}*/
-
 void fluent::Sender::send(const ::msgpack::sbuffer& bytes)
 {
 #ifdef FLUENT_MT
@@ -104,7 +89,7 @@ void fluent::Sender::send_internal(const ::msgpack::sbuffer& bytes)
         buf->write(bytes.data(), bytes.size());
         to_send = buf;
     }
-    //try {
+    try {
         reconnect();
         sock.send(to_send->data(), to_send->size());
         /* TODO should I use release or clear here?
@@ -113,14 +98,14 @@ void fluent::Sender::send_internal(const ::msgpack::sbuffer& bytes)
         if( buf ) {
             delete buf;
         }
-    /*}
+    }
     catch(::std::runtime_error& e) {
         ::std::cerr << "while sending, got exception " << e.what() << "\n";
         close();
         if( buf ) {
             if(  buf->size() > bufmax ) {
-                /* buffer is already full, so drop everything *
-                /* python says put a callback here *
+                /* buffer is already full, so drop everything */
+                /* python says put a callback here */
                 delete buf;
             }
         }
@@ -129,7 +114,7 @@ void fluent::Sender::send_internal(const ::msgpack::sbuffer& bytes)
             buf->write(bytes.data(), bytes.size());
         }
         throw;
-    }*/
+    }
 }
 
 void fluent::Sender::reconnect()

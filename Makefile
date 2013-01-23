@@ -2,8 +2,8 @@ CXX=clang++
 INCLUDES= -I include
 CXXFLAGS= -pedantic -Wall -Wextra $(INCLUDES) -DFLUENT_MT -Weffc++ -std=c++11 -g
 
-test: src/test.o src/fluent.o src/socket.o
-	$(CXX) src/test.o src/fluent.o src/socket.o -o test
+fluent_test: src/test.o src/fluent.o src/socket.o
+	$(CXX) src/test.o src/fluent.o src/socket.o -o fluent_test
 
 src/fluent.o: src/fluent.cpp include/fluent_cpp.h include/socket.h
 	$(CXX) $(CXXFLAGS) src/fluent.cpp -c -o src/fluent.o

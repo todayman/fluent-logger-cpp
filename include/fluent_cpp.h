@@ -18,7 +18,6 @@
 
 namespace fluent {
     
-    //template<typename Stream>
     class Sender {
     protected:
         std::string host;
@@ -135,17 +134,9 @@ namespace fluent {
 
 #ifdef FLUENT_MT
     /* Errors using the mutex */
-    class NoResources : public std::runtime_error {
-    public:
-        NoResources() : std::runtime_error("The system is temporarily out of resources to create another mutex.") { }
-    };
     class InvalidAttributes : public std::runtime_error {
     public:
         InvalidAttributes() : std::runtime_error("Cannot create a mutex with the (NULL) attribute.") { }
-    };
-    class NoMemory : public std::runtime_error {
-    public:
-        NoMemory() : std::runtime_error("There is not enough memory to create a mutex.") { }
     };
     class UnknownError : public std::runtime_error {
     public:

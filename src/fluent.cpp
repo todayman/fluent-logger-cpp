@@ -18,7 +18,7 @@ fluent::Sender::Sender(
             /* success! */
             break;
         case EAGAIN:
-            throw NoResources();
+            throw NoResources(EAGAIN);
             break;
         case EINVAL:
             throw InvalidAttributes();

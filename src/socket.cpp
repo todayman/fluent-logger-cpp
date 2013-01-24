@@ -8,7 +8,36 @@ fluent::Socket::Socket(domain_t domain, type_t type, int protocol)
 {
     fd = socket(domain, type, protocol);
     if( fd < 0 ) {
-        throw Exception(errno);
+        switch(errno) {
+            case EACCES:
+                throw PermissionDenied();
+                break;
+            case EAFNOSUPPORT:
+                throw AFNotSupported();
+                break;
+            case EISCONN:
+                /* fall through */
+            case EMFILE:
+                throw DescriptorTableFull(errno);
+                break;
+            case ENFILE:
+                throw SystemTableFull();
+                break;
+            case ENOBUFS:
+                throw NoResources(ENOBUFS);
+                break;
+            case ENOMEM:
+                throw NoMemory();
+                break;
+            case EPROTONOSUPPORT:
+                throw ProtocolType();
+                break;
+            case EPROTOTYPE:
+                throw UnsupportedProtocol();
+                break;
+            default:
+                throw ErrnoException(errno, "Unknown error occured");
+        }
     }
 }
 
@@ -51,7 +80,6 @@ static inline void set_one_timeout(int fd, int which, const struct timeval& s_ti
                 break;
             default:
                 throw ::fluent::ErrnoException(errno, "Unknown error occured");
-                break;
         }
     }
 }
@@ -75,6 +103,10 @@ static inline ::std::string itoa(int arg) {
     return strm.str();
 }
 
+inline fluent::Socket::AddressResolutionError::AddressResolutionError(int e)
+    : ::std::runtime_error(gai_strerror(e)), ecode(e)
+{ }
+
 void fluent::Socket::connect(const ::std::string& host, int port)
 {
     struct addrinfo * result = nullptr;
@@ -84,9 +116,14 @@ void fluent::Socket::connect(const ::std::string& host, int port)
 
     int retval = getaddrinfo(host.c_str(), itoa(port).c_str(), &hints, &result);
 
+    if( retval != 0 ) {
+        throw AddressResolutionError(retval);
+    }
+    
     if( !result ) {
         /* TODO throw some kind of exception */
-        return;
+        throw ::std::runtime_error("(Internal socket error) "
+                "getaddrinfo(...) didn't return an error, but the result is NULL");
     }
     
     retval = ::connect(fd, result->ai_addr, result->ai_addrlen);
@@ -96,7 +133,76 @@ void fluent::Socket::connect(const ::std::string& host, int port)
     }
 
     if( retval < 0 ) {
-        throw Exception(errno);
+        /* TODO these are different for UNIX domain sockets */
+        switch( errno ) {
+            case EACCES:
+                throw NoBroadcastOption();
+                break;
+            case EADDRINUSE:
+                throw AddressInUse();
+                break;
+            case EADDRNOTAVAIL:
+                throw AddressNotAvailable();
+                break;
+            case EAFNOSUPPORT:
+                throw AFNotSupported();
+                break;
+            case EALREADY:
+                throw AlreadyConnecting();
+                break;
+            case EBADF:
+                throw BadFileDescriptor(fd);
+                break;
+            case ECONNREFUSED:
+                throw ConnectionRefused();
+                break;
+            case EFAULT:
+                throw InvalidPointer();
+                break;
+            case EHOSTUNREACH:
+                throw HostUnreachable();
+                break;
+            case EINPROGRESS:
+                throw NotCompletedYet();
+                break;
+            case EINTR:
+                throw InterruptedOperation();
+                break;
+            case EINVAL:
+                throw InvalidArgs();
+                break;
+            case EISCONN:
+                throw Connected();
+                break;
+            case ENETDOWN:
+                throw NetworkDown();
+                break;
+            case ENETUNREACH:
+                throw NetworkUnreachable();
+                break;
+            case ENOBUFS:
+                throw NoBuffers();
+                break;
+            case ENOTSOCK:
+                throw NotASocket(fd);
+                break;
+            case EOPNOTSUPP:
+                throw ListeningSocket();
+                break;
+            case EPROTOTYPE:
+                throw WrongAddressType();
+                break;
+            case ETIMEDOUT:
+                throw TimedOut();
+                break;
+            case ECONNRESET:
+                throw ConnectionReset();
+                break;
+            default:
+                throw ErrnoException(errno, "Unknown error occured.  "
+                        "This may be because this is a UNIX domain socket "
+                        "that returns extra error codes.");
+        }
     }
     connected = true;
 }
@@ -109,15 +215,74 @@ void fluent::Socket::send(const char * data, size_t length)
     }
     ssize_t retval = ::send(fd, data, length, 0);
     if( retval < 0 ) {
-        throw Exception(errno);
-        /* TODO handle errors */
+        switch( errno ) {
+            case EACCES:
+                throw NoBroadcastOption();
+                break;
+            case EAGAIN:
+                throw WouldBlock();
+                break;
+            case EBADF:
+                throw BadFileDescriptor(fd);
+                break;
+            case ECONNRESET:
+                throw ConnectionReset();
+                break;
+            case EFAULT:
+                throw InvalidPointer();
+                break;
+            case EHOSTUNREACH:
+                throw HostUnreachable();
+                break;
+            case EINTR:
+                throw InterruptedOperation();
+                break;
+            case EMSGSIZE:
+                throw BadMessageSize();
+                break;
+            case ENETDOWN:
+                throw NetworkDown();
+                break;
+            case ENETUNREACH:
+                throw NetworkUnreachable();
+                break;
+            case ENOBUFS:
+                throw NoBuffers();
+                break;
+            case ENOTSOCK:
+                throw NotASocket(fd);
+                break;
+            case EOPNOTSUPP:
+                throw BadOptions();
+                break;
+            case EPIPE:
+                throw NotWritable();
+                break;
+            default:
+                break;
+        }
     }
 }
 
 void fluent::Socket::close()
 {
     if( connected ) {
-        ::close(fd);
+        int retval = ::close(fd);
+        if( retval < 0 ) {
+            switch( errno ) {
+                case EBADF:
+                    throw BadFileDescriptor(fd);
+                    break;
+                case EINTR:
+                    throw InterruptedOperation();
+                    break;
+                case EIO:
+                    throw PreviousWriteError();
+                    break;
+                default:
+                    throw ErrnoException(errno, "Unknown error occured");
+            }
+        }
         connected = false;
     }
 }

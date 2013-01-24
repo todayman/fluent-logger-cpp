@@ -1,4 +1,3 @@
-CXX=clang++
 INCLUDES= -I include
 CXXFLAGS= -pedantic -Wall -Wextra $(INCLUDES) -DFLUENT_MT -Weffc++ -std=c++11 -g
 
@@ -14,6 +13,10 @@ src/socket.o: src/socket.cpp include/socket.h
 src/test.o: src/test.cpp include/fluent_cpp.h
 	$(CXX) $(CXXFLAGS) src/test.cpp -c -o src/test.o
 
+.PHONY: test
+test: fluent_test
+	python run_tests.py
+
 .PHONY: clean
 clean:
-	rm test src/*.o
+	rm fluent_test src/*.o
